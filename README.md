@@ -27,6 +27,9 @@ Leiningen coordinates:
   (catch Exception e
     (rollbar e "critical")))
 
+
+(rollbar "just some message")
+
 (rollbar "just some message" "debug")
 ```
 
