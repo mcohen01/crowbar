@@ -26,6 +26,8 @@ Leiningen coordinates:
   ("nofn")
   (catch Exception e
     (rollbar e "critical")))
+
+(rollbar "just some message" "debug")
 ```
 
 ### Ring middleware
