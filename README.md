@@ -43,7 +43,9 @@ Leiningen coordinates:
     (if (= foo "bar") (throw (RuntimeException.)))
     "ok"))
 
-(def handler (-> web-routes api (cb/rollbar "abcdef0123456789abcdef0123456789" "production")))
+(def handler (-> web-routes
+                 api
+                 (cb/rollbar "abcdef0123456789abcdef0123456789" "production")))
 
 (future (http/run-server #'handler {:port 8000}))
 ```
