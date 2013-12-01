@@ -8,6 +8,18 @@
 
 (def endpoint "https://api.rollbar.com/api/1/item/")
 
+(defn- post [body]
+  (http/post endpoint {:form-params {:payload body}}))
+
+(defn- to [level]
+  (if (map? level) nil level))
+
+(defn- level-for
+  [ex & [level]]
+  (if (string? ex)
+      (or (to level) "info")
+      (or (to level) "error")))
+
 (defn- frame [m]
   (let [regex #":[\d]+$"
         file  (repl/source-str m)
@@ -35,18 +47,6 @@
   String
   (report [msg]
     {:message {:body msg}}))
-
-(defn- post [body]
-  (http/post endpoint {:form-params {:payload body}}))
-
-(defn- to [level]
-  (if (map? level) nil level))
-
-(defn- level-for
-  [ex & [level]]
-  (if (string? ex)
-      (or (to level) "info")
-      (or (to level) "error")))
 
 (defn post-body
   [ex level host access-token environment]
