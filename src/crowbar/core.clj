@@ -12,9 +12,10 @@
 
 (defn- frame [m]
   (let [regex #":[\d]+$"
-        file  (repl/source-str m)]
+        file  (repl/source-str m)
+        line  (re-find regex file)]
     (hash-map :filename (s/replace file regex "")
-              :lineno   (.substring (re-find regex file) 1)
+              :lineno   (if line (.substring line 1) 0)
               :method   (repl/method-str m))))
 
 (defn- frames [ex]
