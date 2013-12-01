@@ -40,8 +40,7 @@
   (report [ex]
     (let [parsed (stack/parse-exception ex)]
       {:trace {:frames (map frame (elements parsed))
-               :exception {:class (:class parsed)
-                           :message (:message parsed)}}}))
+               :exception (select-keys parsed [:class :message])}}))
   String
   (report [msg]
     {:message {:body msg}}))
