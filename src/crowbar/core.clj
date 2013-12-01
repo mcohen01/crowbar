@@ -33,17 +33,15 @@
       (lazy-cat (elements (:cause ex)) (:trace-elems ex))
       (:trace-elems ex)))
 
-(defn- frames [ex]
-  (map frame (elements (stack/parse-exception ex))))
-
 (defprotocol Reportable (report [ex]))
 
 (extend-protocol Reportable
   Exception
   (report [ex]
-    {:trace {:frames (frames ex)
-             :exception {:class (str (class ex))
-                         :message (.getMessage ex)}}})
+    (let [parsed (stack/parse-exception ex)]
+      {:trace {:frames (map frame (elements parsed))
+               :exception {:class (:class parsed)
+                           :message (:message parsed)}}}))
   String
   (report [msg]
     {:message {:body msg}}))
