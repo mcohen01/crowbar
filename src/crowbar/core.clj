@@ -1,7 +1,5 @@
 (ns crowbar.core
   (:require [clojure.string      :as s]
-            [clj-time.core       :as joda]
-            [clj-time.coerce     :as coerce]
             [cheshire.core       :as json]
             [org.httpkit.client  :as http]
             [clj-stacktrace.core :as stack]
@@ -18,8 +16,13 @@
               :lineno   (if line (.substring line 1) 0)
               :method   (repl/method-str m))))
 
+(defn- elements [ex]
+  (if (contains? ex :cause)
+      (lazy-cat (elements (:cause ex)) (:trace-elems ex))
+      (:trace-elems ex)))
+
 (defn- frames [ex]
-  (map frame (:trace-elems (stack/parse-exception ex))))
+  (map frame (elements (stack/parse-exception ex))))
 
 (defprotocol Reportable (report [ex]))
 
@@ -51,7 +54,7 @@
    :data
      {:body        (report ex)
       :level       (level-for ex level)
-      :timestamp   (-> (joda/now) coerce/to-long (/ 1000) long)
+      :timestamp   (int (/ (System/currentTimeMillis) 1000))
       :environment environment
       :server      {:host host}
       :request     (if (map? level) level nil)
