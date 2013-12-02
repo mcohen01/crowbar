@@ -3,7 +3,8 @@
             [cheshire.core       :as json]
             [org.httpkit.client  :as http]
             [clj-stacktrace.core :as stack]
-            [clj-stacktrace.repl :as repl])
+            [clj-stacktrace.repl :as repl]
+            [clojure.algo.generic.functor :refer [fmap]])
   (:import java.net.InetAddress))
 
 (def endpoint "https://api.rollbar.com/api/1/item/")
@@ -40,7 +41,7 @@
   (report [ex]
     (let [parsed (stack/parse-exception ex)]
       {:trace {:frames (map frame (elements parsed))
-               :exception (select-keys parsed [:class :message])}}))
+               :exception (fmap str (select-keys parsed [:class :message]))}}))
   String
   (report [msg]
     {:message {:body msg}}))
