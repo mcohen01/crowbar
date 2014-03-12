@@ -10,7 +10,7 @@
                           (try
                             (slurp (:body req))
                             (catch java.io.IOException e
-                              (.printStackStrace e)))))
+                              (.printStackTrace e)))))
    :query_string (str (:query-string req))
    :user_ip      (:remote-addr req)})
 
