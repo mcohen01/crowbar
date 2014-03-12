@@ -6,7 +6,11 @@
   {:url          (str (name (:scheme req)) "://" ((:headers req) "host") (:uri req))
    :method       (-> req :request-method name s/upper-case)
    :headers      (:headers req)
-   :body         (str (if (:body req) (slurp (:body req))))
+   :body         (str (if (:body req)
+                          (try
+                            (slurp (:body req))
+                            (catch java.io.IOException e
+                              (.printStackStrace e)))))
    :query_string (str (:query-string req))
    :user_ip      (:remote-addr req)})
 
