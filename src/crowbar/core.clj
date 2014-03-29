@@ -21,30 +21,37 @@
       (or (to level) "info")
       (or (to level) "error")))
 
-(defn- parse-frame
+(defn parse-frame
   ([m]
     (if (contains? m :lineno)
         m
         (let [regex #":[\d]+$"
               file  (repl/source-str m)
               line  (re-find regex file)]
-          ;; reverse these to see how it looks in the rollbar ui
-          ;; put things in the same order as a java stacktrace appears
-          (parse-frame (s/replace file regex "")
-                       (if line (.substring line 1) 0)
-                       (repl/method-str m)))))
+          (parse-frame (if line (.substring line 1) 0)
+                       (repl/method-str m)
+                       (s/replace file regex "")))))
   ([line method file]
     {:lineno line
      :method method
      :filename file}))
 
 
-(defn- elements [ex]
+(defn elements [ex]
   (if (contains? ex :cause)
       (lazy-cat (:trace-elems ex)
-                [(parse-frame (-> ex :cause :trace-elems first))]
+                [{:filename "Caused By:"
+                  :lineno 0
+                  :method (:message ex)}]
                 (elements (:cause ex)))
       (:trace-elems ex)))
+
+(defn distinct-frame
+  [frames stack-element]
+  (let [frame (parse-frame stack-element)]
+    (when-not (some @frames [frame])
+    (swap! frames conj frame)
+    frame)))
 
 (defprotocol Reportable (report [ex]))
 
@@ -53,11 +60,9 @@
   (report [ex]
     (let [parsed (stack/parse-exception ex)
           frames (atom #{})]
-      {:trace {:frames (map #(let [frame (parse-frame %)]
-                               (when-not (some @frames [frame])
-                                 (swap! frames conj frame)
-                                 frame))
-                            (elements parsed))
+      {:trace {:frames (->> (elements parsed)
+                            (map (partial distinct-frame frames))
+                            (filter not-nil))
                :exception (fmap str (select-keys parsed [:class :message]))}}))
   String
   (report [msg]
