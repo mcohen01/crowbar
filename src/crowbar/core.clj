@@ -21,19 +21,29 @@
       (or (to level) "info")
       (or (to level) "error")))
 
-(defn- parse-frame [m]
-  (let [regex #":[\d]+$"
-        file  (repl/source-str m)
-        line  (re-find regex file)]
-    ;; reverse these to see how it looks in the rollbar ui
-    ;; want to put things in the same order as a java stacktrace appears
-    (hash-map :lineno   (s/replace file regex "")
-              :method   (if line (.substring line 1) 0)
-              :filename (repl/method-str m))))
+(defn- parse-frame
+  ([m]
+    (if (map? m)
+        m
+        (let [regex #":[\d]+$"
+              file  (repl/source-str m)
+              line  (re-find regex file)]
+          ;; reverse these to see how it looks in the rollbar ui
+          ;; put things in the same order as a java stacktrace appears
+          (parse-frame (if line (.substring line 1) 0)
+                       (repl/method-str m)
+                       (s/replace file regex "")))))
+  ([line method file]
+    {:lineno line
+     :method method
+     :filename file}))
+
 
 (defn- elements [ex]
   (if (contains? ex :cause)
-      (lazy-cat (:trace-elems ex) (elements (:cause ex)))
+      (lazy-cat (:trace-elems ex)
+                [(parse-frame (-> ex :cause :trace-elems first))]
+                (elements (:cause ex)))
       (:trace-elems ex)))
 
 (defprotocol Reportable (report [ex]))
