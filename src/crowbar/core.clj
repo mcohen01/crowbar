@@ -30,9 +30,9 @@
               line  (re-find regex file)]
           ;; reverse these to see how it looks in the rollbar ui
           ;; put things in the same order as a java stacktrace appears
-          (parse-frame (if line (.substring line 1) 0)
-                       (repl/method-str m)
-                       (s/replace file regex "")))))
+          (parse-frame (s/replace file regex "")
+                       (if line (.substring line 1) 0)
+                       (repl/method-str m)))))
   ([line method file]
     {:lineno line
      :method method
