@@ -50,8 +50,8 @@
   [frames stack-element]
   (let [frame (parse-frame stack-element)]
     (when-not (some @frames [frame])
-    (swap! frames conj frame)
-    frame)))
+      (swap! frames conj frame)
+      frame)))
 
 (defprotocol Reportable (report [ex]))
 
