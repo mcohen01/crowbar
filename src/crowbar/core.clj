@@ -23,7 +23,7 @@
 
 (defn- parse-frame
   ([m]
-    (if (map? m)
+    (if (contains? m :lineno)
         m
         (let [regex #":[\d]+$"
               file  (repl/source-str m)
