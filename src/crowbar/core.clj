@@ -40,9 +40,7 @@
 (defn elements [ex]
   (if (contains? ex :cause)
       (lazy-cat (:trace-elems ex)
-                [{:filename "Caused By:"
-                  :lineno 0
-                  :method (:message ex)}]
+                [(parse-frame 0 (:message ex) "Caused By:")]
                 (elements (:cause ex)))
       (:trace-elems ex)))
 
