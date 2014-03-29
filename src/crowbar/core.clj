@@ -21,17 +21,19 @@
       (or (to level) "info")
       (or (to level) "error")))
 
-(defn- frame [m]
+(defn- parse-frame [m]
   (let [regex #":[\d]+$"
         file  (repl/source-str m)
         line  (re-find regex file)]
-    (hash-map :filename (s/replace file regex "")
-              :lineno   (if line (.substring line 1) 0)
-              :method   (repl/method-str m))))
+    ;; reverse these to see how it looks in the rollbar ui
+    ;; want to put things in the same order as a java stacktrace appears
+    (hash-map :lineno   (s/replace file regex "")
+              :method   (if line (.substring line 1) 0)
+              :filename (repl/method-str m))))
 
 (defn- elements [ex]
   (if (contains? ex :cause)
-      (lazy-cat (elements (:cause ex)) (:trace-elems ex))
+      (lazy-cat (:trace-elems ex) (elements (:cause ex)))
       (:trace-elems ex)))
 
 (defprotocol Reportable (report [ex]))
@@ -39,8 +41,13 @@
 (extend-protocol Reportable
   Exception
   (report [ex]
-    (let [parsed (stack/parse-exception ex)]
-      {:trace {:frames (map frame (elements parsed))
+    (let [parsed (stack/parse-exception ex)
+          frames (atom #{})]
+      {:trace {:frames (map #(let [frame (parse-frame %)]
+                               (when-not (some @frames [frame])
+                                 (swap! frames conj frame)
+                                 frame))
+                            (elements parsed))
                :exception (fmap str (select-keys parsed [:class :message]))}}))
   String
   (report [msg]
