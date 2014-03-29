@@ -62,7 +62,7 @@
           frames (atom #{})]
       {:trace {:frames (->> (elements parsed)
                             (map (partial distinct-frame frames))
-                            (filter not-nil))
+                            (filter not-empty))
                :exception (fmap str (select-keys parsed [:class :message]))}}))
   String
   (report [msg]
