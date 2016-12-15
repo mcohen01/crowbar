@@ -32,7 +32,7 @@
                        (repl/method-str m)
                        (s/replace file regex "")))))
   ([line method file]
-    {:lineno line
+    {:lineno (Integer/parseInt line)
      :method method
      :filename file}))
 
